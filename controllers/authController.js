@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
+const path = require('path');
+const { deleteOldProfileImage } = require('../middleware/upload');
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -343,10 +345,99 @@ const changePassword = async (req, res) => {
   }
 };
 
+// @desc    Upload profile image
+// @route   POST /api/auth/profile/image
+// @access  Private
+const uploadProfileImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No image file provided'
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Delete old profile image if it exists
+    if (user.profileImage) {
+      deleteOldProfileImage(user.profileImage);
+    }
+
+    // Update user with new profile image path
+    const imageUrl = `/uploads/profile-images/${req.file.filename}`;
+    user.profileImage = imageUrl;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile image uploaded successfully',
+      data: {
+        profileImage: imageUrl
+      }
+    });
+
+  } catch (error) {
+    console.error('Upload profile image error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during image upload',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
+// @desc    Delete profile image
+// @route   DELETE /api/auth/profile/image
+// @access  Private
+const deleteProfileImage = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Delete the image file if it exists
+    if (user.profileImage) {
+      deleteOldProfileImage(user.profileImage);
+      
+      // Remove profile image from user document
+      user.profileImage = null;
+      await user.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile image deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete profile image error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during image deletion',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   getMe,
   updateProfile,
-  changePassword
+  changePassword,
+  uploadProfileImage,
+  deleteProfileImage
 };

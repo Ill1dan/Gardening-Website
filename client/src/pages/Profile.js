@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { PencilIcon, KeyIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, KeyIcon, CameraIcon, UserIcon } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const Profile = () => {
@@ -8,7 +8,9 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [errors, setErrors] = useState({});
+  const fileInputRef = useRef(null);
 
   const [profileData, setProfileData] = useState({
     firstName: user?.firstName || '',
@@ -114,6 +116,79 @@ const Profile = () => {
     }
   };
 
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setErrors({ profileImage: 'Please select an image file' });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors({ profileImage: 'Image size must be less than 5MB' });
+      return;
+    }
+
+    setUploadingImage(true);
+    setErrors({});
+
+    try {
+      const formData = new FormData();
+      formData.append('profileImage', file);
+
+      const response = await fetch('/api/auth/profile/image', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update the user context with new profile image
+        await updateProfile({ profileImage: result.data.profileImage });
+      } else {
+        setErrors({ profileImage: result.message || 'Failed to upload image' });
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      setErrors({ profileImage: 'Failed to upload image. Please try again.' });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    setUploadingImage(true);
+    try {
+      const response = await fetch('/api/auth/profile/image', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        await updateProfile({ profileImage: null });
+      } else {
+        setErrors({ profileImage: result.message || 'Failed to remove image' });
+      }
+    } catch (error) {
+      console.error('Image removal error:', error);
+      setErrors({ profileImage: 'Failed to remove image. Please try again.' });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const getRoleBadgeClass = (role) => {
     switch (role) {
       case 'admin':
@@ -137,11 +212,55 @@ const Profile = () => {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="text-center">
-              <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-primary-600">
-                  {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-                </span>
+              <div className="relative w-24 h-24 mx-auto mb-4">
+                <div className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden bg-primary-100">
+                  {user?.profileImage ? (
+                    <img 
+                      src={user.profileImage} 
+                      alt={`${user.firstName}'s profile`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl font-bold text-primary-600">
+                      {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="absolute bottom-0 right-0 w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white hover:bg-primary-700 transition-colors disabled:opacity-50"
+                  title="Change profile picture"
+                >
+                  {uploadingImage ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <CameraIcon className="w-4 h-4" />
+                  )}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
               </div>
+              
+              {errors.profileImage && (
+                <p className="text-sm text-red-600 mb-2">{errors.profileImage}</p>
+              )}
+              
+              {user?.profileImage && (
+                <button
+                  onClick={handleRemoveImage}
+                  disabled={uploadingImage}
+                  className="text-sm text-red-600 hover:text-red-700 mb-2 disabled:opacity-50"
+                >
+                  Remove Photo
+                </button>
+              )}
+              
               <h2 className="text-xl font-semibold text-gray-900">{user?.fullName}</h2>
               <p className="text-gray-600">{user?.email}</p>
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-2 ${getRoleBadgeClass(user?.role)}`}>

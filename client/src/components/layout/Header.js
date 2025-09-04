@@ -96,8 +96,16 @@ const Header = () => {
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                   className="flex items-center space-x-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors"
                 >
-                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                    <UserIcon className="w-5 h-5 text-primary-600" />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden bg-primary-100">
+                    {user?.profileImage ? (
+                      <img 
+                        src={user.profileImage} 
+                        alt={`${user.firstName}'s profile`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <UserIcon className="w-5 h-5 text-primary-600" />
+                    )}
                   </div>
                   <span className="hidden sm:block">{user?.firstName}</span>
                   <span className={`hidden sm:block ${getRoleBadgeClass(user?.role)}`}>
@@ -107,10 +115,28 @@ const Header = () => {
 
                 {/* Profile Dropdown */}
                 {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                    <div className="px-4 py-2 text-sm text-gray-900 border-b border-gray-200">
-                      <div className="font-medium">{user?.fullName}</div>
-                      <div className="text-gray-500">{user?.email}</div>
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                    <div className="px-4 py-3 text-sm text-gray-900 border-b border-gray-200">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-primary-100">
+                          {user?.profileImage ? (
+                            <img 
+                              src={user.profileImage} 
+                              alt={`${user.firstName}'s profile`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <UserIcon className="w-6 h-6 text-primary-600" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium">{user?.fullName}</div>
+                          <div className="text-gray-500 text-xs">{user?.email}</div>
+                          <div className={`text-xs mt-1 px-2 py-0.5 rounded-full ${getRoleBadgeClass(user?.role)}`}>
+                            {user?.role}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     
                     <Link
@@ -122,7 +148,7 @@ const Header = () => {
                       Profile
                     </Link>
                     
-                    {isAdmin && (
+                    {isAdmin() && (
                       <Link
                         to="/admin/users"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
