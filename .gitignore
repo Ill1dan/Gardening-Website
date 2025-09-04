@@ -101,3 +101,84 @@ Thumbs.db
 
 # Windows
 desktop.ini
+
+# Uploads and user-generated content
+uploads/
+*/uploads/
+uploads/profile-images/
+*/uploads/profile-images/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Local configuration files
+config.local.js
+config.local.json
+*.local.*
+
+# API keys and secrets
+secrets.json
+secrets.js
+*.key
+*.pem
+*.p12
+*.pfx
+
+# SSL certificates
+*.crt
+*.cert
+*.pem
+
+# Session files
+sessions/
+*.session
+
+# Cache directories
+.cache/
+cache/
+
+# Test files
+test-results/
+coverage/
+.nyc_output/
+
+# IDE specific files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/workspace.xml
+.idea/tasks.xml
+
+# Local development files
+.local/
+local/
+
+# Package lock files (optional - some teams prefer to commit these)
+# package-lock.json
+# */package-lock.json
+
+# Environment specific files
+.env.production
+.env.staging
+.env.development
+.env.test
+
+# Debug files
+.debug/
+debug.log
+
+# Runtime files
+*.runtime
+runtime/
+
+# Temporary upload files
+temp-uploads/
+temp/
+tmp/

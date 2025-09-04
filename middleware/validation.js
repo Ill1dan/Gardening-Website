@@ -1,4 +1,23 @@
-const { body, param, query } = require('express-validator');
+const { body, param, query, validationResult } = require('express-validator');
+
+// Middleware to handle validation results
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation error',
+      errors: errors.array().map(error => ({
+        field: error.path || error.param,
+        message: error.msg,
+        value: error.value
+      }))
+    });
+  }
+  
+  next();
+};
 
 // User registration validation
 const validateRegistration = [
@@ -213,7 +232,163 @@ const validateGardenerQuery = [
     .withMessage('Invalid specialization')
 ];
 
+// Plant validation
+const validatePlant = [
+  body('name')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Plant name is required and must not exceed 100 characters'),
+  
+  body('scientificName')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Scientific name must not exceed 100 characters'),
+  
+  body('category')
+    .isIn(['indoor', 'outdoor', 'herbs', 'vegetables', 'flowers', 'trees', 'succulents', 'tools', 'fertilizers', 'seeds'])
+    .withMessage('Invalid category'),
+  
+  body('type')
+    .isIn(['plant', 'seed', 'tool', 'fertilizer', 'accessory'])
+    .withMessage('Invalid type'),
+  
+  body('shortDescription')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Short description is required and must not exceed 200 characters'),
+  
+  body('fullDescription')
+    .trim()
+    .isLength({ min: 1, max: 2000 })
+    .withMessage('Full description is required and must not exceed 2000 characters'),
+  
+  body('images')
+    .isArray({ min: 1 })
+    .withMessage('At least one image is required'),
+  
+  body('images.*.url')
+    .isURL()
+    .withMessage('Each image must have a valid URL'),
+  
+  body('careInstructions.sunlight')
+    .optional({ checkFalsy: true })
+    .isIn(['low', 'medium', 'high', 'direct', 'indirect'])
+    .withMessage('Invalid sunlight requirement'),
+  
+  body('careInstructions.water')
+    .optional({ checkFalsy: true })
+    .isIn(['low', 'medium', 'high', 'daily', 'weekly', 'bi-weekly', 'monthly'])
+    .withMessage('Invalid water requirement'),
+  
+  body('careInstructions.soilType')
+    .optional({ checkFalsy: true })
+    .isIn(['well-draining', 'moist', 'sandy', 'loamy', 'clay', 'acidic', 'alkaline'])
+    .withMessage('Invalid soil type'),
+  
+  body('growthInfo.difficulty')
+    .optional({ checkFalsy: true })
+    .isIn(['beginner', 'intermediate', 'advanced', 'expert'])
+    .withMessage('Invalid difficulty level'),
+  
+  body('tags')
+    .optional({ checkFalsy: true })
+    .isArray()
+    .withMessage('Tags must be an array'),
+  
+  body('price.amount')
+    .optional({ checkFalsy: true })
+    .isFloat({ min: 0 })
+    .withMessage('Price must be a positive number')
+];
+
+// Review validation
+const validateReview = [
+  body('rating')
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Rating must be between 1 and 5'),
+  
+  body('title')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Review title is required and must not exceed 100 characters'),
+  
+  body('comment')
+    .trim()
+    .isLength({ min: 1, max: 1000 })
+    .withMessage('Review comment is required and must not exceed 1000 characters'),
+  
+  body('images')
+    .optional()
+    .isArray()
+    .withMessage('Images must be an array'),
+  
+  body('images.*.url')
+    .optional()
+    .isURL()
+    .withMessage('Each image must have a valid URL')
+];
+
+// Plant query validation
+const validatePlantQuery = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Page must be a positive integer'),
+  
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 50 })
+    .withMessage('Limit must be between 1 and 50'),
+  
+  query('category')
+    .optional()
+    .isIn(['indoor', 'outdoor', 'herbs', 'vegetables', 'flowers', 'trees', 'succulents', 'tools', 'fertilizers', 'seeds'])
+    .withMessage('Invalid category'),
+  
+  query('type')
+    .optional()
+    .isIn(['plant', 'seed', 'tool', 'fertilizer', 'accessory'])
+    .withMessage('Invalid type'),
+  
+  query('difficulty')
+    .optional()
+    .isIn(['beginner', 'intermediate', 'advanced', 'expert'])
+    .withMessage('Invalid difficulty level'),
+  
+  query('sunlight')
+    .optional()
+    .isIn(['low', 'medium', 'high', 'direct', 'indirect'])
+    .withMessage('Invalid sunlight requirement'),
+  
+  query('water')
+    .optional()
+    .isIn(['low', 'medium', 'high', 'daily', 'weekly', 'bi-weekly', 'monthly'])
+    .withMessage('Invalid water requirement'),
+  
+  query('search')
+    .optional()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Search term must be between 1 and 100 characters'),
+  
+  query('sortBy')
+    .optional()
+    .isIn(['createdAt', 'name', 'averageRating', 'favoriteCount', 'viewCount'])
+    .withMessage('Invalid sort field'),
+  
+  query('sortOrder')
+    .optional()
+    .isIn(['asc', 'desc'])
+    .withMessage('Sort order must be asc or desc'),
+  
+  query('featured')
+    .optional()
+    .isBoolean()
+    .withMessage('Featured must be a boolean')
+];
+
 module.exports = {
+  handleValidationErrors,
   validateRegistration,
   validateLogin,
   validateProfileUpdate,
@@ -221,5 +396,8 @@ module.exports = {
   validateRoleUpdate,
   validateObjectId,
   validateUserQuery,
-  validateGardenerQuery
+  validateGardenerQuery,
+  validatePlant,
+  validateReview,
+  validatePlantQuery
 };

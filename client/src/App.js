@@ -17,6 +17,9 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import UserManagement from './pages/admin/UserManagement';
 import GardenerDirectory from './pages/GardenerDirectory';
+import PlantCatalog from './pages/PlantCatalog';
+import PlantDetail from './pages/PlantDetail';
+import AddEditPlant from './pages/AddEditPlant';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -29,6 +32,8 @@ function App() {
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
               <Route path="gardeners" element={<GardenerDirectory />} />
+              <Route path="plants" element={<PlantCatalog />} />
+              <Route path="plants/:id" element={<PlantDetail />} />
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
               
@@ -62,6 +67,18 @@ function App() {
               }>
                 {/* Future gardener-specific routes will go here */}
               </Route>
+
+              {/* Plant management routes (gardener+ only) */}
+              <Route path="plants/add" element={
+                <RoleRoute minimumRole="gardener">
+                  <AddEditPlant />
+                </RoleRoute>
+              } />
+              <Route path="plants/:id/edit" element={
+                <RoleRoute minimumRole="gardener">
+                  <AddEditPlant />
+                </RoleRoute>
+              } />
             </Route>
             
             {/* Catch all route */}

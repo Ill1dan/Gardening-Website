@@ -50,8 +50,10 @@ JWT_EXPIRE=30d
 
 **For MongoDB Atlas, your MONGODB_URI will look like:**
 ```env
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/gardening-website?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>?retryWrites=true&w=majority
 ```
+
+**⚠️ SECURITY WARNING**: Never commit your actual MongoDB credentials to version control!
 
 ### Step 3: Initialize Database with Demo Data
 

@@ -73,6 +73,16 @@ const Header = () => {
             >
               Gardeners
             </Link>
+            <Link
+              to="/plants"
+              className={`text-sm font-medium transition-colors ${
+                isActivePath('/plants') || location.pathname.startsWith('/plants/')
+                  ? 'text-primary-600' 
+                  : 'text-gray-700 hover:text-primary-600'
+              }`}
+            >
+              Plant Catalog
+            </Link>
             
             {isAuthenticated && (
               <Link
@@ -221,6 +231,15 @@ const Header = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Gardeners
+              </Link>
+              <Link
+                to="/plants"
+                className={`text-sm font-medium ${
+                  isActivePath('/plants') || location.pathname.startsWith('/plants/') ? 'text-primary-600' : 'text-gray-700'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Plant Catalog
               </Link>
               
               {isAuthenticated && (

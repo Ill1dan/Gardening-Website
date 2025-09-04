@@ -187,9 +187,9 @@ const Login = () => {
         <div className="mt-8 p-4 bg-blue-50 rounded-lg">
           <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Accounts</h3>
           <div className="text-xs text-blue-700 space-y-1">
-            <p><strong>Admin:</strong> admin@garden.com / password123</p>
-            <p><strong>Gardener:</strong> gardener@garden.com / password123</p>
-            <p><strong>Viewer:</strong> viewer@garden.com / password123</p>
+            <p><strong>Admin:</strong> admin@garden.com / Password123!</p>
+            <p><strong>Gardener:</strong> gardener@garden.com / Password123!</p>
+            <p><strong>Viewer:</strong> viewer@garden.com / Password123!</p>
           </div>
         </div>
       </div>

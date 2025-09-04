@@ -2,6 +2,12 @@
 
 A comprehensive gardening community platform built with the MERN stack, featuring role-based access control (RBAC) for Viewers, Gardeners, and Admins.
 
+## 🔒 Security Notice
+
+**⚠️ IMPORTANT**: This repository contains example configuration files with placeholder credentials. Never commit real database credentials or API keys to version control.
+
+For security best practices and incident response, see [SECURITY.md](SECURITY.md).
+
 ## 🚀 Features
 
 ### Role-Based Access Control (RBAC)
