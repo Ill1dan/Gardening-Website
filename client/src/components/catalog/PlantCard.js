@@ -1,7 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
-const PlantCard = ({ plant }) => {
+const PlantCard = ({ plant, onDelete }) => {
+  const { isAdmin } = useAuth();
   const primaryImage = plant.images?.find(img => img.isPrimary) || plant.images?.[0];
 
   const getDifficultyColor = (difficulty) => {
@@ -35,8 +38,38 @@ const PlantCard = ({ plant }) => {
     return colors[category] || 'bg-gray-100 text-gray-800';
   };
 
+  const handleDelete = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (window.confirm(`Are you sure you want to permanently delete "${plant.name}"?\n\nThis will also delete all reviews and favorites for this plant.\n\nThis action cannot be undone!`)) {
+      onDelete(plant._id);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 relative">
+      {/* Admin Controls */}
+      {isAdmin() && onDelete && (
+        <div className="absolute top-2 right-2 z-10 flex space-x-1">
+          <Link
+            to={`/plants/${plant._id}/edit`}
+            className="bg-white bg-opacity-90 hover:bg-opacity-100 text-indigo-600 p-2 rounded-full shadow-md hover:shadow-lg transition-all"
+            title="Edit Plant"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <PencilIcon className="w-4 h-4" />
+          </Link>
+          <button
+            onClick={handleDelete}
+            className="bg-white bg-opacity-90 hover:bg-opacity-100 text-red-600 p-2 rounded-full shadow-md hover:shadow-lg transition-all"
+            title="Delete Plant"
+          >
+            <TrashIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       <Link to={`/plants/${plant._id}`}>
         {/* Image */}
         <div className="aspect-w-16 aspect-h-12 bg-gray-200">
@@ -49,7 +82,7 @@ const PlantCard = ({ plant }) => {
           ) : (
             <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
               <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
           )}

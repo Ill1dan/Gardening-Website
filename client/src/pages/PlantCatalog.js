@@ -9,7 +9,7 @@ import PlantFilters from '../components/catalog/PlantFilters';
 import Pagination from '../components/common/Pagination';
 
 const PlantCatalog = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [plants, setPlants] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -91,6 +91,20 @@ const PlantCatalog = () => {
     return Object.entries(currentFilters).filter(([key, value]) => 
       value && value !== '' && key !== 'page' && key !== 'limit' && key !== 'sortBy' && key !== 'sortOrder'
     ).length;
+  };
+
+  const handleAdminDeletePlant = async (plantId) => {
+    try {
+      const result = await plantService.adminDeletePlant(plantId);
+      if (result.success) {
+        toast.success(result.message);
+        // Refresh the plants list
+        fetchPlants();
+      }
+    } catch (error) {
+      console.error('Error deleting plant:', error);
+      toast.error(error.message || 'Failed to delete plant');
+    }
   };
 
   if (loading && plants.length === 0) {
@@ -197,7 +211,11 @@ const PlantCatalog = () => {
             {!loading && plants.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {plants.map((plant) => (
-                  <PlantCard key={plant._id} plant={plant} />
+                  <PlantCard 
+                    key={plant._id} 
+                    plant={plant} 
+                    onDelete={isAdmin() ? handleAdminDeletePlant : null}
+                  />
                 ))}
               </div>
             )}

@@ -147,6 +147,26 @@ class PlantService {
     }
   }
 
+  // Admin: Get all plants including inactive ones
+  async adminGetAllPlants(params = {}) {
+    try {
+      const response = await api.get('/plants/admin/all', { params });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  // Admin: Permanently delete plant
+  async adminDeletePlant(id) {
+    try {
+      const response = await api.delete(`/plants/admin/${id}/permanent`);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   // Handle API errors
   handleError(error) {
     if (error.response) {
