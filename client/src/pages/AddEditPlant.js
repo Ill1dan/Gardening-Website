@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import plantService from '../services/plantService';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 const AddEditPlant = () => {
   const { id } = useParams(); // If id exists, we're editing
@@ -266,6 +267,16 @@ const AddEditPlant = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center mb-8">
+            <button
+              type="button"
+              onClick={() => navigate('/plants')}
+              className="flex items-center text-gray-600 hover:text-green-600 transition-colors mr-4"
+            >
+              <ArrowLeftIcon className="w-4 h-4 mr-2" />
+              Back to Plants
+            </button>
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-8">
             {isEditing ? 'Edit Plant' : 'Add New Plant'}
           </h1>

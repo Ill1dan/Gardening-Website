@@ -245,7 +245,7 @@ const AddEditArticle = () => {
                 name="title"
                 value={article.title}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
                   errors.title ? 'border-red-300' : 'border-gray-300'
                 }`}
                 placeholder="Enter article title..."
@@ -269,7 +269,7 @@ const AddEditArticle = () => {
                 value={article.excerpt}
                 onChange={handleInputChange}
                 rows={3}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
                   errors.excerpt ? 'border-red-300' : 'border-gray-300'
                 }`}
                 placeholder="Write a brief summary of your article..."
@@ -292,7 +292,7 @@ const AddEditArticle = () => {
                 name="category"
                 value={article.category}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
                   errors.category ? 'border-red-300' : 'border-gray-300'
                 }`}
               >
@@ -317,7 +317,7 @@ const AddEditArticle = () => {
                 name="status"
                 value={article.status}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
@@ -346,7 +346,7 @@ const AddEditArticle = () => {
                 type="url"
                 value={article.featuredImage.url}
                 onChange={(e) => handleNestedInputChange('featuredImage', 'url', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
                   errors.featuredImage ? 'border-red-300' : 'border-gray-300'
                 }`}
                 placeholder="https://example.com/image.jpg"
@@ -364,7 +364,7 @@ const AddEditArticle = () => {
                 type="text"
                 value={article.featuredImage.alt}
                 onChange={(e) => handleNestedInputChange('featuredImage', 'alt', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Describe the image for accessibility..."
                 maxLength={200}
               />
@@ -407,7 +407,7 @@ const AddEditArticle = () => {
               value={article.content}
               onChange={handleInputChange}
               rows={15}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
                 errors.content ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="Write your article content here using Markdown formatting...
@@ -461,7 +461,7 @@ Examples:
                     handleAddTag(e);
                   }
                 }}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Add a tag..."
                 maxLength={30}
               />
@@ -531,7 +531,7 @@ Examples:
                         type="url"
                         value={image.url}
                         onChange={(e) => handleImageChange(index, 'url', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         placeholder="https://example.com/image.jpg"
                       />
                     </div>
@@ -543,7 +543,7 @@ Examples:
                         type="text"
                         value={image.alt}
                         onChange={(e) => handleImageChange(index, 'alt', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         placeholder="Describe the image..."
                       />
                     </div>
@@ -555,7 +555,7 @@ Examples:
                         type="text"
                         value={image.caption}
                         onChange={(e) => handleImageChange(index, 'caption', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         placeholder="Optional caption..."
                         maxLength={200}
                       />

@@ -12,6 +12,7 @@ const userRoutes = require('./routes/userRoutes');
 const plantRoutes = require('./routes/plantRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const articleRoutes = require('./routes/articleRoutes');
+const eventRoutes = require('./routes/eventRoutes');
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/plants', plantRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/articles', articleRoutes);
+app.use('/api/events', eventRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

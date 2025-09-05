@@ -500,6 +500,231 @@ const validateArticleQuery = [
     .withMessage('Invalid status')
 ];
 
+// Event validation
+const validateEvent = [
+  body('title')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Event title is required and must not exceed 200 characters'),
+  
+  body('description')
+    .trim()
+    .isLength({ min: 1, max: 2000 })
+    .withMessage('Event description is required and must not exceed 2000 characters'),
+  
+  body('shortDescription')
+    .trim()
+    .isLength({ min: 1, max: 300 })
+    .withMessage('Event short description is required and must not exceed 300 characters'),
+  
+  body('type')
+    .isIn(['workshop', 'plant-fair', 'seasonal-campaign', 'webinar', 'garden-tour', 'plant-swap', 'community-garden', 'expert-talk'])
+    .withMessage('Invalid event type'),
+  
+  body('category')
+    .isIn(['beginner', 'intermediate', 'advanced', 'all-levels', 'kids', 'seniors', 'community'])
+    .withMessage('Invalid event category'),
+  
+  body('difficulty')
+    .isIn(['beginner', 'intermediate', 'advanced'])
+    .withMessage('Invalid difficulty level'),
+  
+  body('startDate')
+    .isISO8601()
+    .withMessage('Start date must be a valid date')
+    .custom((value) => {
+      const startDate = new Date(value);
+      const now = new Date();
+      // Allow events to be created for today or future dates (with some buffer for timezone differences)
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      if (startDate < yesterday) {
+        throw new Error('Start date cannot be in the past');
+      }
+      return true;
+    }),
+  
+  body('endDate')
+    .isISO8601()
+    .withMessage('End date must be a valid date')
+    .custom((value, { req }) => {
+      if (new Date(value) <= new Date(req.body.startDate)) {
+        throw new Error('End date must be after start date');
+      }
+      return true;
+    }),
+  
+  body('registrationDeadline')
+    .optional()
+    .isISO8601()
+    .withMessage('Registration deadline must be a valid date')
+    .custom((value, { req }) => {
+      if (value && new Date(value) >= new Date(req.body.startDate)) {
+        throw new Error('Registration deadline must be before start date');
+      }
+      return true;
+    }),
+  
+  body('location.type')
+    .isIn(['online', 'physical', 'hybrid'])
+    .withMessage('Location type must be online, physical, or hybrid'),
+  
+  body('location.venue')
+    .optional({ checkFalsy: true })
+    .isLength({ max: 200 })
+    .withMessage('Venue name must not exceed 200 characters'),
+  
+  body('location.onlineLink')
+    .optional({ checkFalsy: true })
+    .isURL()
+    .withMessage('Online link must be a valid URL'),
+  
+  body('capacity')
+    .optional()
+    .isInt({ min: 1, max: 10000 })
+    .withMessage('Capacity must be between 1 and 10000'),
+  
+  body('price')
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage('Price must be a positive number'),
+  
+  body('currency')
+    .optional()
+    .isLength({ min: 3, max: 3 })
+    .withMessage('Currency must be a 3-character code'),
+  
+  body('featuredImage.url')
+    .isURL()
+    .withMessage('Featured image must have a valid URL'),
+  
+  body('featuredImage.alt')
+    .optional()
+    .isLength({ max: 200 })
+    .withMessage('Featured image alt text must not exceed 200 characters'),
+  
+  body('images')
+    .optional()
+    .isArray()
+    .withMessage('Images must be an array'),
+  
+  body('images.*.url')
+    .optional()
+    .isURL()
+    .withMessage('Each image must have a valid URL'),
+  
+  body('tags')
+    .optional()
+    .isArray()
+    .withMessage('Tags must be an array')
+    .custom((value) => {
+      if (value && value.length > 10) {
+        throw new Error('Maximum 10 tags allowed');
+      }
+      if (value && value.some(tag => tag.length > 30)) {
+        throw new Error('Each tag must not exceed 30 characters');
+      }
+      return true;
+    }),
+  
+  body('requirements')
+    .optional()
+    .isArray()
+    .withMessage('Requirements must be an array'),
+  
+  body('whatToExpect')
+    .optional()
+    .isArray()
+    .withMessage('What to expect must be an array'),
+  
+  body('materials')
+    .optional()
+    .isArray()
+    .withMessage('Materials must be an array'),
+  
+  body('duration.hours')
+    .optional()
+    .isInt({ min: 0, max: 168 })
+    .withMessage('Duration hours must be between 0 and 168'),
+  
+  body('duration.minutes')
+    .optional()
+    .isInt({ min: 0, max: 59 })
+    .withMessage('Duration minutes must be between 0 and 59'),
+  
+  body('status')
+    .optional()
+    .isIn(['draft', 'published', 'cancelled', 'completed'])
+    .withMessage('Status must be draft, published, cancelled, or completed')
+];
+
+// Event query validation
+const validateEventQuery = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Page must be a positive integer'),
+  
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 50 })
+    .withMessage('Limit must be between 1 and 50'),
+  
+  query('type')
+    .optional()
+    .isIn(['workshop', 'plant-fair', 'seasonal-campaign', 'webinar', 'garden-tour', 'plant-swap', 'community-garden', 'expert-talk'])
+    .withMessage('Invalid event type'),
+  
+  query('category')
+    .optional()
+    .isIn(['beginner', 'intermediate', 'advanced', 'all-levels', 'kids', 'seniors', 'community'])
+    .withMessage('Invalid event category'),
+  
+  query('difficulty')
+    .optional()
+    .isIn(['beginner', 'intermediate', 'advanced'])
+    .withMessage('Invalid difficulty level'),
+  
+  query('organizer')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid organizer ID'),
+  
+  query('search')
+    .optional()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Search term must be between 1 and 100 characters'),
+  
+  query('sortBy')
+    .optional()
+    .isIn(['createdAt', 'startDate', 'endDate', 'title', 'viewCount', 'registrationCount'])
+    .withMessage('Invalid sort field'),
+  
+  query('sortOrder')
+    .optional()
+    .isIn(['asc', 'desc'])
+    .withMessage('Sort order must be asc or desc'),
+  
+  query('featured')
+    .optional()
+    .isBoolean()
+    .withMessage('Featured must be a boolean'),
+  
+  query('upcoming')
+    .optional()
+    .isBoolean()
+    .withMessage('Upcoming must be a boolean'),
+  
+  query('ongoing')
+    .optional()
+    .isBoolean()
+    .withMessage('Ongoing must be a boolean'),
+  
+  query('status')
+    .optional()
+    .isIn(['draft', 'published', 'cancelled', 'completed'])
+    .withMessage('Invalid status')
+];
+
 module.exports = {
   handleValidationErrors,
   validateRegistration,
@@ -514,5 +739,7 @@ module.exports = {
   validateReview,
   validatePlantQuery,
   validateArticle,
-  validateArticleQuery
+  validateArticleQuery,
+  validateEvent,
+  validateEventQuery
 };

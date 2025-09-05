@@ -90,9 +90,9 @@ const articleService = {
   },
 
   // Like/Unlike article
-  toggleArticleLike: async (id, action) => {
+  toggleArticleLike: async (id) => {
     try {
-      const response = await api.post(`/articles/${id}/like`, { action });
+      const response = await api.post(`/articles/${id}/like`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

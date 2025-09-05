@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import userService from '../services/userService';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { MapPinIcon, StarIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon, StarIcon, UserGroupIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 const GardenerDirectory = () => {
   const [gardeners, setGardeners] = useState([]);
@@ -97,13 +97,49 @@ const GardenerDirectory = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Meet Our Gardeners
-        </h1>
-        <p className="text-gray-600">
-          Connect with experienced gardeners who are ready to share their knowledge and help you grow.
-        </p>
+      <div className="relative mb-12">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 rounded-2xl opacity-50"></div>
+        
+        <div className="relative bg-white rounded-2xl shadow-lg border border-gray-100 p-8 md:p-12">
+          <div className="text-center max-w-4xl mx-auto">
+            {/* Icon and title */}
+            <div className="flex items-center justify-center mb-6">
+              <div className="relative">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <UserGroupIcon className="w-8 h-8 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                  <SparklesIcon className="w-4 h-4 text-yellow-800" />
+                </div>
+              </div>
+            </div>
+            
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              Meet Our Gardeners
+            </h1>
+            
+            <p className="text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">
+              Connect with experienced gardeners who are ready to share their knowledge and help you grow.
+            </p>
+            
+            {/* Stats */}
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
+              <div className="flex items-center">
+                <StarIcon className="w-4 h-4 text-yellow-500 mr-1" />
+                <span>Expert Knowledge</span>
+              </div>
+              <div className="flex items-center">
+                <MapPinIcon className="w-4 h-4 text-green-500 mr-1" />
+                <span>Local & Global</span>
+              </div>
+              <div className="flex items-center">
+                <UserGroupIcon className="w-4 h-4 text-blue-500 mr-1" />
+                <span>Community Driven</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}

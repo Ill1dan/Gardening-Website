@@ -93,6 +93,16 @@ const Header = () => {
             >
               Articles
             </Link>
+            <Link
+              to="/events"
+              className={`text-sm font-medium transition-colors ${
+                isActivePath('/events') || location.pathname.startsWith('/events/')
+                  ? 'text-primary-600' 
+                  : 'text-gray-700 hover:text-primary-600'
+              }`}
+            >
+              Events
+            </Link>
             
             {isAuthenticated && (
               <Link
@@ -259,6 +269,15 @@ const Header = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Articles
+              </Link>
+              <Link
+                to="/events"
+                className={`text-sm font-medium ${
+                  isActivePath('/events') || location.pathname.startsWith('/events/') ? 'text-primary-600' : 'text-gray-700'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Events
               </Link>
               
               {isAuthenticated && (

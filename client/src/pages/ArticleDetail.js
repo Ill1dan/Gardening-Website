@@ -63,6 +63,9 @@ const ArticleDetail = () => {
       setArticle(response.data.article);
       setRelatedArticles(response.data.relatedArticles);
       
+      // Set the like status from the server response
+      setIsLiked(response.data.article.isLiked || false);
+      
       // Increment view count separately, only once per component mount
       if (!hasIncrementedView.current && response.data.article.status === 'published') {
         hasIncrementedView.current = true;
@@ -89,16 +92,16 @@ const ArticleDetail = () => {
 
     try {
       setIsLiking(true);
-      const action = isLiked ? 'unlike' : 'like';
-      await articleService.toggleArticleLike(article._id, action);
+      const response = await articleService.toggleArticleLike(article._id);
       
-      setIsLiked(!isLiked);
+      // Update the like status and count from the server response
+      setIsLiked(response.data.isLiked);
       setArticle(prev => ({
         ...prev,
-        likeCount: prev.likeCount + (isLiked ? -1 : 1)
+        likeCount: response.data.likeCount
       }));
       
-      toast.success(`Article ${action}d successfully`);
+      toast.success(`Article ${response.data.isLiked ? 'liked' : 'unliked'} successfully`);
     } catch (err) {
       toast.error(err.message || 'Failed to update like status');
     } finally {
@@ -107,7 +110,7 @@ const ArticleDetail = () => {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this article?')) {
+    if (!window.confirm(`Are you sure you want to delete "${article.title}"?\n\nThis will hide the article from public view but it can be restored later.`)) {
       return;
     }
 
@@ -369,8 +372,9 @@ const ArticleDetail = () => {
                         Edit
                       </Link>
                       <button
-                        onClick={handleDelete}
+                        onClick={isAdmin() ? handleAdminDeleteArticle : handleDelete}
                         className="flex items-center px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                        title={isAdmin() ? "Permanently delete article (Admin only)" : "Delete article"}
                       >
                         <TrashIcon className="w-4 h-4 mr-1" />
                         Delete
@@ -393,16 +397,6 @@ const ArticleDetail = () => {
                       >
                         <StarIcon className="w-4 h-4 mr-1" />
                         {article.featured ? 'Unfeature' : 'Feature'}
-                      </button>
-
-                      {/* Admin Hard Delete */}
-                      <button
-                        onClick={handleAdminDeleteArticle}
-                        className="flex items-center px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
-                        title="Permanently delete article (Admin only)"
-                      >
-                        <TrashIcon className="w-4 h-4 mr-1" />
-                        Hard Delete
                       </button>
                     </div>
                   )}

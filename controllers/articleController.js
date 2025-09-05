@@ -1,4 +1,5 @@
 const Article = require('../models/Article');
+const ArticleLike = require('../models/ArticleLike');
 const mongoose = require('mongoose');
 
 // Get all published articles with filtering and pagination
@@ -106,6 +107,16 @@ const getArticleById = async (req, res) => {
       });
     }
 
+    // Check if the current user has liked this article
+    let isLiked = false;
+    if (req.user) {
+      const userLike = await ArticleLike.findOne({ 
+        user: req.user._id, 
+        article: article._id 
+      });
+      isLiked = !!userLike;
+    }
+
     // View count is now handled by a separate endpoint
 
     // Get related articles
@@ -122,7 +133,10 @@ const getArticleById = async (req, res) => {
     res.json({
       success: true,
       data: {
-        article,
+        article: {
+          ...article.toObject(),
+          isLiked: isLiked
+        },
         relatedArticles
       }
     });
@@ -392,6 +406,7 @@ const getAuthorArticles = async (req, res) => {
 const toggleArticleLike = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user._id;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
@@ -409,25 +424,36 @@ const toggleArticleLike = async (req, res) => {
       });
     }
 
-    // For now, we'll just increment/decrement the like count
-    // In a real application, you'd want to track individual user likes
-    const { action } = req.body; // 'like' or 'unlike'
-    
-    if (action === 'like') {
-      await article.incrementLikeCount();
-    } else if (action === 'unlike') {
+    // Check if user has already liked this article
+    const existingLike = await ArticleLike.findOne({ 
+      user: userId, 
+      article: id 
+    });
+
+    let isLiked;
+
+    if (existingLike) {
+      // User has already liked - unlike the article
+      await ArticleLike.findByIdAndDelete(existingLike._id);
       await article.decrementLikeCount();
+      isLiked = false;
     } else {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid action. Use "like" or "unlike"'
-      });
+      // User hasn't liked - like the article
+      await ArticleLike.create({ user: userId, article: id });
+      await article.incrementLikeCount();
+      isLiked = true;
     }
+
+    // Get the updated article with the correct like count
+    const updatedArticle = await Article.findById(id);
 
     res.json({
       success: true,
-      message: `Article ${action}d successfully`,
-      data: { likeCount: article.likeCount }
+      message: `Article ${isLiked ? 'liked' : 'unliked'} successfully`,
+      data: { 
+        likeCount: updatedArticle.likeCount,
+        isLiked: isLiked
+      }
     });
   } catch (error) {
     console.error('Error in toggleArticleLike:', error);

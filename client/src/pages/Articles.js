@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
@@ -35,7 +35,8 @@ const Articles = () => {
     page: 1,
     limit: 12,
     status: '',
-    isActive: ''
+    isActive: '',
+    featured: ''
   });
   
   // Separate search input state to prevent re-renders
@@ -57,18 +58,19 @@ const Articles = () => {
     'outdoor-gardening': 'Outdoor Gardening'
   };
 
-  const fetchArticles = useCallback(async () => {
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
+
+  const fetchArticles = useCallback(async (currentFilters = filtersRef.current) => {
     try {
       setLoading(true);
       
-      console.log('fetchArticles called - isAdmin:', isAdmin(), 'filters:', filters);
       
       // Use admin service if user is admin, otherwise use regular service
       const response = isAdmin() 
-        ? await articleService.adminGetAllArticles(filters)
-        : await articleService.getArticles(filters);
+        ? await articleService.adminGetAllArticles(currentFilters)
+        : await articleService.getArticles(currentFilters);
       
-      console.log('Articles response:', response);
       setArticles(response.data);
       setPagination(response.pagination);
     } catch (err) {
@@ -77,36 +79,42 @@ const Articles = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, filters]);
+  }, [isAdmin]);
 
   useEffect(() => {
-    console.log('Articles useEffect - authLoading:', authLoading, 'user:', user, 'isAdmin:', isAdmin());
     
     // Don't fetch articles if auth is still loading
     if (authLoading) {
-      console.log('Skipping fetch - auth still loading');
       return;
     }
     
-    fetchArticles();
+    fetchArticles(filters);
+  }, [filters, authLoading]); // Removed fetchArticles from dependencies
+  
+  // Fetch categories only once when component mounts
+  useEffect(() => {
     fetchCategories();
-  }, [filters, authLoading, fetchArticles]);
+  }, []);
 
-  // Sync search input with filters when filters change from other sources
-  useEffect(() => {
-    setSearchInput(filters.search);
-  }, [filters.search]);
-
-  // Debounced search - automatically search after user stops typing
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchInput !== filters.search) {
-        setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
-      }
-    }, 500); // 500ms delay
-
-    return () => clearTimeout(timeoutId);
-  }, [searchInput, filters.search]);
+  // Handle search input changes with debounced API call (no state update)
+  const searchTimeoutRef = useRef(null);
+  
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Set new timeout for search
+    searchTimeoutRef.current = setTimeout(() => {
+      // Create new filters with search value but don't update state
+      const newFilters = { ...filters, search: value, page: 1 };
+      fetchArticles(newFilters);
+    }, 300);
+  };
 
   const fetchCategories = async () => {
     try {
@@ -117,18 +125,23 @@ const Articles = () => {
     }
   };
 
-  const handleSearchInputChange = (e) => {
-    setSearchInput(e.target.value);
-  };
-
-
   const handleClearSearch = () => {
     setSearchInput('');
-    setFilters(prev => ({ ...prev, search: '', page: 1 }));
+    // Clear any pending search timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    // Immediately search with empty string
+    const newFilters = { ...filters, search: '', page: 1 };
+    fetchArticles(newFilters);
   };
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+    // If search filter is changed externally, update the input
+    if (key === 'search') {
+      setSearchInput(value);
+    }
   };
 
   const handlePageChange = (page) => {
@@ -228,7 +241,7 @@ const Articles = () => {
                 placeholder="Search articles..."
                 value={searchInput}
                 onChange={handleSearchInputChange}
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               {searchInput && (
                 <button
@@ -255,7 +268,7 @@ const Articles = () => {
         {/* Advanced Filters */}
         {showFilters && (
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Category Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -264,7 +277,7 @@ const Articles = () => {
                 <select
                   value={filters.category}
                   onChange={(e) => handleFilterChange('category', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="">All Categories</option>
                   {categories.map((cat) => (
@@ -272,6 +285,21 @@ const Articles = () => {
                       {getCategoryLabel(cat._id)} ({cat.count})
                     </option>
                   ))}
+                </select>
+              </div>
+
+              {/* Featured Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Featured
+                </label>
+                <select
+                  value={filters.featured}
+                  onChange={(e) => handleFilterChange('featured', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="">All Articles</option>
+                  <option value="true">Featured Only</option>
                 </select>
               </div>
 
@@ -283,7 +311,7 @@ const Articles = () => {
                 <select
                   value={filters.sortBy}
                   onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="publishedAt">Date Published</option>
                   <option value="viewCount">Most Viewed</option>
@@ -306,7 +334,7 @@ const Articles = () => {
                 <select
                   value={filters.sortOrder}
                   onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="desc">Newest First</option>
                   <option value="asc">Oldest First</option>
@@ -327,7 +355,7 @@ const Articles = () => {
                     <select
                       value={filters.status}
                       onChange={(e) => handleFilterChange('status', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
                       <option value="">All Statuses</option>
                       <option value="draft">Draft</option>
@@ -344,7 +372,7 @@ const Articles = () => {
                     <select
                       value={filters.isActive}
                       onChange={(e) => handleFilterChange('isActive', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
                       <option value="">All Articles</option>
                       <option value="true">Active Only</option>

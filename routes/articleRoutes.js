@@ -33,7 +33,7 @@ router.post('/:id/like', protect, toggleArticleLike);
 router.post('/:id/view', incrementArticleView);
 
 // Article detail route (must come after specific routes to avoid conflicts)
-router.get('/:id', getArticleById);
+router.get('/:id', optionalAuth, getArticleById);
 
 // Article management routes (gardener+ only)
 router.post('/', protect, requireRole('gardener'), validateArticle, handleValidationErrors, createArticle);

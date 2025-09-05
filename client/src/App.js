@@ -23,6 +23,9 @@ import AddEditPlant from './pages/AddEditPlant';
 import Articles from './pages/Articles';
 import ArticleDetail from './pages/ArticleDetail';
 import AddEditArticle from './pages/AddEditArticle';
+import Events from './pages/Events';
+import EventDetail from './pages/EventDetail';
+import AddEditEvent from './pages/AddEditEvent';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -39,6 +42,8 @@ function App() {
               <Route path="plants/:id" element={<PlantDetail />} />
               <Route path="articles" element={<Articles />} />
               <Route path="articles/:id" element={<ArticleDetail />} />
+              <Route path="events" element={<Events />} />
+              <Route path="events/:id" element={<EventDetail />} />
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
               
@@ -85,6 +90,28 @@ function App() {
               <Route path="articles/:id/edit" element={
                 <RoleRoute minimumRole="gardener">
                   <AddEditArticle />
+                </RoleRoute>
+              } />
+
+              {/* Event management routes (admin only) */}
+              <Route path="events/new" element={
+                <RoleRoute requiredRole="admin">
+                  <AddEditEvent />
+                </RoleRoute>
+              } />
+              <Route path="events/:id/edit" element={
+                <RoleRoute requiredRole="admin">
+                  <AddEditEvent />
+                </RoleRoute>
+              } />
+              <Route path="admin/events/new" element={
+                <RoleRoute requiredRole="admin">
+                  <AddEditEvent />
+                </RoleRoute>
+              } />
+              <Route path="admin/events/:id/edit" element={
+                <RoleRoute requiredRole="admin">
+                  <AddEditEvent />
                 </RoleRoute>
               } />
             </Route>
