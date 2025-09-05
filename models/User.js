@@ -66,6 +66,10 @@ const userSchema = new mongoose.Schema({
     enum: ['beginner', 'intermediate', 'advanced', 'expert'],
     default: 'beginner'
   },
+  experienceLevelUpdatedAt: {
+    type: Date,
+    default: null
+  },
   specializations: [{
     type: String,
     enum: ['vegetables', 'flowers', 'herbs', 'trees', 'indoor-plants', 'organic-gardening', 'landscaping', 'composting']
@@ -73,6 +77,24 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  isBanned: {
+    type: Boolean,
+    default: false
+  },
+  banReason: {
+    type: String,
+    maxlength: [500, 'Ban reason cannot exceed 500 characters'],
+    default: null
+  },
+  bannedAt: {
+    type: Date,
+    default: null
+  },
+  bannedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
   },
   isEmailVerified: {
     type: Boolean,
@@ -105,6 +127,8 @@ userSchema.virtual('fullName').get(function() {
 userSchema.index({ email: 1 });
 userSchema.index({ username: 1 });
 userSchema.index({ role: 1 });
+userSchema.index({ isActive: 1 });
+userSchema.index({ isBanned: 1 });
 
 // Pre-save middleware to hash password
 userSchema.pre('save', async function(next) {
@@ -159,6 +183,54 @@ userSchema.statics.getUserStats = function() {
     { $group: { _id: '$role', count: { $sum: 1 } } },
     { $sort: { _id: 1 } }
   ]);
+};
+
+// Static method to ban a user
+userSchema.statics.banUser = async function(userId, banReason, bannedBy) {
+  return this.findByIdAndUpdate(
+    userId,
+    {
+      isBanned: true,
+      banReason,
+      bannedAt: new Date(),
+      bannedBy
+    },
+    { new: true }
+  );
+};
+
+// Static method to unban a user
+userSchema.statics.unbanUser = async function(userId) {
+  return this.findByIdAndUpdate(
+    userId,
+    {
+      isBanned: false,
+      banReason: null,
+      bannedAt: null,
+      bannedBy: null
+    },
+    { new: true }
+  );
+};
+
+// Static method to permanently delete a user and all related data
+userSchema.statics.permanentlyDeleteUser = async function(userId) {
+  const mongoose = require('mongoose');
+  const Plant = mongoose.model('Plant');
+  const Review = mongoose.model('Review');
+  const Favorite = mongoose.model('Favorite');
+  
+  // Delete all plants created by the user
+  await Plant.deleteMany({ addedBy: userId });
+  
+  // Delete all reviews by the user
+  await Review.deleteMany({ user: userId });
+  
+  // Delete all favorites by the user
+  await Favorite.deleteMany({ user: userId });
+  
+  // Finally delete the user
+  return this.findByIdAndDelete(userId);
 };
 
 module.exports = mongoose.model('User', userSchema);

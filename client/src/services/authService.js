@@ -31,20 +31,31 @@ class AuthService {
       const response = await api.post('/auth/login', credentials);
       
       if (response.data.success) {
-        const { token, user } = response.data;
+        const { token, user, wasPromoted, promotionInfo } = response.data;
         
         // Store token and user data
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
         
-        return { success: true, user, token };
+        return { 
+          success: true, 
+          user, 
+          token, 
+          wasPromoted,
+          promotionInfo
+        };
       }
       
       return { success: false, message: response.data.message };
     } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Login failed';
+      const banReason = error.response?.data?.banReason;
+      
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Login failed' 
+        message: errorMessage,
+        banReason: banReason,
+        isBanned: errorMessage.includes('banned')
       };
     }
   }

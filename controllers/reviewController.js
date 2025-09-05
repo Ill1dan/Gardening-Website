@@ -330,11 +330,110 @@ const getReviewById = async (req, res) => {
   }
 };
 
+// Admin: Get all reviews including inactive ones
+const adminGetAllReviews = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc', isActive, plantId, userId } = req.query;
+
+    // Build filter query - admin can see inactive reviews
+    const filter = {};
+    
+    if (isActive !== undefined) filter.isActive = isActive === 'true';
+    if (plantId) filter.plant = plantId;
+    if (userId) filter.user = userId;
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Build sort object
+    const sortObj = {};
+    sortObj[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Execute query
+    const reviews = await Review.find(filter)
+      .populate('user', 'username firstName lastName profileImage')
+      .populate('plant', 'name images category')
+      .limit(parseInt(limit))
+      .skip(skip)
+      .sort(sortObj);
+
+    // Get total count for pagination
+    const totalCount = await Review.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
+
+    res.json({
+      success: true,
+      data: reviews,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalCount,
+        hasNextPage: parseInt(page) < totalPages,
+        hasPrevPage: parseInt(page) > 1
+      }
+    });
+  } catch (error) {
+    console.error('Error in adminGetAllReviews:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching reviews',
+      error: error.message
+    });
+  }
+};
+
+// Admin: Hard delete review (permanent deletion)
+const adminHardDeleteReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid review ID'
+      });
+    }
+
+    const review = await Review.findById(id);
+    
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: 'Review not found'
+      });
+    }
+
+    // Hard delete the review
+    await Review.findByIdAndDelete(id);
+    
+    // Update plant rating after deletion
+    try {
+      await Review.updatePlantRating(review.plant);
+    } catch (error) {
+      console.error('Error updating plant rating after review deletion:', error);
+    }
+
+    res.json({
+      success: true,
+      message: 'Review permanently deleted'
+    });
+  } catch (error) {
+    console.error('Error in adminHardDeleteReview:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting review',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createReview,
   updateReview,
   deleteReview,
   getUserReviews,
   voteHelpful,
-  getReviewById
+  getReviewById,
+  adminGetAllReviews,
+  adminHardDeleteReview
 };

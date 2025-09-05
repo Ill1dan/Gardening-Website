@@ -6,7 +6,11 @@ const {
   deactivateUser,
   reactivateUser,
   getUserStats,
-  getGardeners
+  getGardeners,
+  banUser,
+  unbanUser,
+  permanentlyDeleteUser,
+  updateUserExperience
 } = require('../controllers/userController');
 const { protect, authorize, requireRole, authorizeOwnerOrAdmin } = require('../middleware/auth');
 const {
@@ -33,5 +37,9 @@ router.get('/admin/stats', authorize('admin'), getUserStats);
 router.put('/:id/role', authorize('admin'), validateObjectId(), validateRoleUpdate, updateUserRole);
 router.put('/:id/deactivate', authorize('admin'), validateObjectId(), deactivateUser);
 router.put('/:id/reactivate', authorize('admin'), validateObjectId(), reactivateUser);
+router.put('/:id/ban', authorize('admin'), validateObjectId(), banUser);
+router.put('/:id/unban', authorize('admin'), validateObjectId(), unbanUser);
+router.put('/:id/experience', authorize('admin'), validateObjectId(), updateUserExperience);
+router.delete('/:id/permanent', authorize('admin'), validateObjectId(), permanentlyDeleteUser);
 
 module.exports = router;

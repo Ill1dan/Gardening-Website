@@ -146,6 +146,93 @@ class UserService {
       };
     }
   }
+
+  // Ban user (Admin only)
+  async banUser(userId, banReason) {
+    try {
+      const response = await api.put(`/users/${userId}/ban`, { banReason });
+      
+      if (response.data.success) {
+        return { 
+          success: true, 
+          user: response.data.user, 
+          message: response.data.message 
+        };
+      }
+      
+      return { success: false, message: response.data.message };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to ban user' 
+      };
+    }
+  }
+
+  // Unban user (Admin only)
+  async unbanUser(userId) {
+    try {
+      const response = await api.put(`/users/${userId}/unban`);
+      
+      if (response.data.success) {
+        return { 
+          success: true, 
+          user: response.data.user, 
+          message: response.data.message 
+        };
+      }
+      
+      return { success: false, message: response.data.message };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to unban user' 
+      };
+    }
+  }
+
+  // Permanently delete user (Admin only)
+  async permanentlyDeleteUser(userId) {
+    try {
+      const response = await api.delete(`/users/${userId}/permanent`);
+      
+      if (response.data.success) {
+        return { 
+          success: true, 
+          message: response.data.message 
+        };
+      }
+      
+      return { success: false, message: response.data.message };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to permanently delete user' 
+      };
+    }
+  }
+
+  // Update user experience level (Admin only)
+  async updateUserExperience(userId, experienceLevel) {
+    try {
+      const response = await api.put(`/users/${userId}/experience`, { experienceLevel });
+      
+      if (response.data.success) {
+        return { 
+          success: true, 
+          user: response.data.user, 
+          message: response.data.message 
+        };
+      }
+      
+      return { success: false, message: response.data.message };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to update user experience level' 
+      };
+    }
+  }
 }
 
 export default new UserService();

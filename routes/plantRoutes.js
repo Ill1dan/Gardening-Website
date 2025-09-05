@@ -11,7 +11,9 @@ const {
   removeFromFavorites,
   getUserFavorites,
   getFeaturedPlants,
-  getCategories
+  getCategories,
+  adminGetAllPlants,
+  adminHardDeletePlant
 } = require('../controllers/plantController');
 
 const { protect, requireRole } = require('../middleware/auth');
@@ -34,5 +36,9 @@ router.delete('/:id/favorites', protect, removeFromFavorites);
 router.post('/', protect, requireRole('gardener'), validatePlant, handleValidationErrors, createPlant);
 router.put('/:id', protect, requireRole('gardener'), validatePlant, handleValidationErrors, updatePlant);
 router.delete('/:id', protect, requireRole('gardener'), deletePlant);
+
+// Admin routes
+router.get('/admin/all', protect, requireRole('admin'), adminGetAllPlants);
+router.delete('/admin/:id/permanent', protect, requireRole('admin'), adminHardDeletePlant);
 
 module.exports = router;

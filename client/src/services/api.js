@@ -35,7 +35,12 @@ api.interceptors.response.use(
       // Handle specific error status codes
       switch (response.status) {
         case 401:
-          // Unauthorized - clear token and redirect to login
+          // Don't handle 401 errors for login/register endpoints - let the auth service handle them
+          if (response.config?.url?.includes('/auth/login') || response.config?.url?.includes('/auth/register')) {
+            // Let the authService handle login/register errors
+            break;
+          }
+          // For other 401 errors (expired sessions), clear token and redirect
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           window.location.href = '/login';

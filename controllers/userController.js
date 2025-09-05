@@ -12,12 +12,22 @@ const getAllUsers = async (req, res) => {
     const search = req.query.search;
     const sortBy = req.query.sortBy || 'createdAt';
     const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+    const isActive = req.query.isActive;
+    const isBanned = req.query.isBanned;
 
-    // Build query
-    let query = { isActive: true };
+    // Build query - admin can see all users including inactive and banned
+    let query = {};
 
     if (role && ['viewer', 'gardener', 'admin'].includes(role)) {
       query.role = role;
+    }
+
+    if (isActive !== undefined) {
+      query.isActive = isActive === 'true';
+    }
+
+    if (isBanned !== undefined) {
+      query.isBanned = isBanned === 'true';
     }
 
     if (search) {
@@ -288,6 +298,7 @@ const getGardeners = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 12;
     const experienceLevel = req.query.experienceLevel;
     const specialization = req.query.specialization;
+    const search = req.query.search;
 
     // Build query
     let query = { 
@@ -301,6 +312,15 @@ const getGardeners = async (req, res) => {
 
     if (specialization) {
       query.specializations = { $in: [specialization] };
+    }
+
+    // Add search functionality
+    if (search) {
+      query.$or = [
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { username: { $regex: search, $options: 'i' } }
+      ];
     }
 
     // Calculate pagination
@@ -342,6 +362,170 @@ const getGardeners = async (req, res) => {
   }
 };
 
+// @desc    Ban user (Admin only)
+// @route   PUT /api/users/:id/ban
+// @access  Private/Admin
+const banUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { banReason } = req.body;
+
+    // Prevent admin from banning themselves
+    if (req.user.id === userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot ban your own account'
+      });
+    }
+
+    const user = await User.banUser(userId, banReason, req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User banned successfully',
+      user
+    });
+
+  } catch (error) {
+    console.error('Ban user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during user ban',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
+// @desc    Unban user (Admin only)
+// @route   PUT /api/users/:id/unban
+// @access  Private/Admin
+const unbanUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const user = await User.unbanUser(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User unbanned successfully',
+      user
+    });
+
+  } catch (error) {
+    console.error('Unban user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during user unban',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
+// @desc    Permanently delete user (Admin only)
+// @route   DELETE /api/users/:id/permanent
+// @access  Private/Admin
+const permanentlyDeleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Prevent admin from deleting themselves
+    if (req.user.id === userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot delete your own account'
+      });
+    }
+
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Permanently delete user and all related data
+    await User.permanentlyDeleteUser(userId);
+
+    res.status(200).json({
+      success: true,
+      message: 'User and all related data permanently deleted'
+    });
+
+  } catch (error) {
+    console.error('Permanent delete user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during user deletion',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
+// @desc    Update user experience level (Admin only)
+// @route   PUT /api/users/:id/experience
+// @access  Private/Admin
+const updateUserExperience = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { experienceLevel } = req.body;
+    const userId = req.params.id;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { 
+        experienceLevel,
+        experienceLevelUpdatedAt: new Date()
+      },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `User experience level updated to ${experienceLevel}`,
+      user
+    });
+
+  } catch (error) {
+    console.error('Update user experience error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during experience level update',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -349,5 +533,9 @@ module.exports = {
   deactivateUser,
   reactivateUser,
   getUserStats,
-  getGardeners
+  getGardeners,
+  banUser,
+  unbanUser,
+  permanentlyDeleteUser,
+  updateUserExperience
 };

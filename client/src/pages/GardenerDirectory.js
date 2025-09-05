@@ -151,7 +151,7 @@ const GardenerDirectory = () => {
             </label>
             <input
               type="text"
-              placeholder="Search by name or location..."
+              placeholder="Search by name..."
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               className="input-field"

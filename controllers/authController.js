@@ -41,6 +41,41 @@ const sendTokenResponse = (user, statusCode, res, message) => {
   });
 };
 
+// Send token response with promotion notification
+const sendTokenResponseWithPromotion = (user, statusCode, res, message) => {
+  const token = generateToken(user._id);
+  
+  // Remove password from output
+  user.password = undefined;
+  
+  res.status(statusCode).json({
+    success: true,
+    message,
+    token,
+    wasPromoted: true,
+    promotionInfo: {
+      newLevel: user.experienceLevel,
+      promotedAt: user.experienceLevelUpdatedAt
+    },
+    user: {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      fullName: user.fullName,
+      role: user.role,
+      profileImage: user.profileImage,
+      bio: user.bio,
+      location: user.location,
+      experienceLevel: user.experienceLevel,
+      specializations: user.specializations,
+      isEmailVerified: user.isEmailVerified,
+      createdAt: user.createdAt
+    }
+  });
+};
+
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
@@ -144,6 +179,15 @@ const login = async (req, res) => {
       });
     }
 
+    // Check if user is banned
+    if (user.isBanned) {
+      return res.status(401).json({
+        success: false,
+        message: 'Your account has been temporarily banned. Please contact support for more information.',
+        banReason: user.banReason
+      });
+    }
+
     // Check password
     const isMatch = await user.comparePassword(password);
 
@@ -154,11 +198,21 @@ const login = async (req, res) => {
       });
     }
 
+    // Check if user was promoted since last login
+    const wasPromoted = user.experienceLevelUpdatedAt && 
+                       user.lastLogin && 
+                       user.experienceLevelUpdatedAt > user.lastLogin;
+
     // Update last login
     user.lastLogin = new Date();
     await user.save();
 
-    sendTokenResponse(user, 200, res, 'Login successful');
+    // Send response with promotion info
+    if (wasPromoted) {
+      sendTokenResponseWithPromotion(user, 200, res, 'Login successful');
+    } else {
+      sendTokenResponse(user, 200, res, 'Login successful');
+    }
 
   } catch (error) {
     console.error('Login error:', error);

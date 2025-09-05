@@ -581,6 +581,127 @@ const getCategories = async (req, res) => {
   }
 };
 
+// Admin: Get all plants including inactive ones
+const adminGetAllPlants = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 12,
+      category,
+      type,
+      difficulty,
+      sunlight,
+      water,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      featured,
+      isActive
+    } = req.query;
+
+    // Build filter query - admin can see inactive plants
+    const filter = {};
+    
+    if (category) filter.category = category;
+    if (type) filter.type = type;
+    if (difficulty) filter['growthInfo.difficulty'] = difficulty;
+    if (sunlight) filter['careInstructions.sunlight'] = sunlight;
+    if (water) filter['careInstructions.water'] = water;
+    if (featured === 'true') filter.featured = true;
+    if (isActive !== undefined) filter.isActive = isActive === 'true';
+
+    // Add search functionality
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { shortDescription: { $regex: search, $options: 'i' } },
+        { tags: { $in: [new RegExp(search, 'i')] } }
+      ];
+    }
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Build sort object
+    const sortObj = {};
+    sortObj[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Execute query
+    const plants = await Plant.find(filter)
+      .populate('addedBy', 'username firstName lastName')
+      .limit(parseInt(limit))
+      .skip(skip)
+      .sort(sortObj);
+
+    // Get total count for pagination
+    const totalCount = await Plant.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
+
+    res.json({
+      success: true,
+      data: plants,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalCount,
+        hasNextPage: parseInt(page) < totalPages,
+        hasPrevPage: parseInt(page) > 1
+      }
+    });
+  } catch (error) {
+    console.error('Error in adminGetAllPlants:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching plants',
+      error: error.message
+    });
+  }
+};
+
+// Admin: Hard delete plant (permanent deletion)
+const adminHardDeletePlant = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid plant ID'
+      });
+    }
+
+    const plant = await Plant.findById(id);
+    
+    if (!plant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Plant not found'
+      });
+    }
+
+    // Hard delete the plant and all related data
+    await Plant.findByIdAndDelete(id);
+    
+    // Delete all reviews for this plant
+    await Review.deleteMany({ plant: id });
+    
+    // Delete all favorites for this plant
+    await Favorite.deleteMany({ plant: id });
+
+    res.json({
+      success: true,
+      message: 'Plant permanently deleted'
+    });
+  } catch (error) {
+    console.error('Error in adminHardDeletePlant:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting plant',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getPlants,
   getPlantById,
@@ -592,5 +713,7 @@ module.exports = {
   removeFromFavorites,
   getUserFavorites,
   getFeaturedPlants,
-  getCategories
+  getCategories,
+  adminGetAllPlants,
+  adminHardDeletePlant
 };

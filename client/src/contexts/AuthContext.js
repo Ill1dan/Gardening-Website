@@ -61,10 +61,30 @@ export const AuthProvider = ({ children }) => {
       if (result.success) {
         setUser(result.user);
         setIsAuthenticated(true);
-        toast.success('Login successful!');
+        
+        // Check for promotion notification
+        if (result.wasPromoted) {
+          showPromotionCongratulations(result.promotionInfo.newLevel);
+        } else {
+          toast.success('Login successful!');
+        }
+        
         return { success: true, user: result.user };
       } else {
-        toast.error(result.message);
+        // Special handling for banned users
+        if (result.isBanned) {
+          const banMessage = `🚫 Account Banned\n\n${result.message}${result.banReason ? `\n\nReason: ${result.banReason}` : ''}`;
+          
+          // Show alert for banned users (more prominent than toast)
+          alert(banMessage);
+          
+          // Also show toast for consistency
+          toast.error(result.message, {
+            autoClose: 8000, // Longer duration for ban messages
+          });
+        } else {
+          toast.error(result.message);
+        }
         return { success: false, message: result.message };
       }
     } catch (error) {
@@ -145,6 +165,34 @@ export const AuthProvider = ({ children }) => {
       toast.error(message);
       return { success: false, message };
     }
+  };
+
+  // Show promotion congratulations
+  const showPromotionCongratulations = (newLevel) => {
+    const levelEmojis = {
+      beginner: '🌱',
+      intermediate: '🌿',
+      advanced: '🌳',
+      expert: '🏆'
+    };
+
+    const levelMessages = {
+      beginner: 'Welcome to your gardening journey!',
+      intermediate: 'Your skills are growing!',
+      advanced: 'You\'re becoming a master gardener!',
+      expert: 'Congratulations on reaching expert level!'
+    };
+
+    const emoji = levelEmojis[newLevel] || '🎉';
+    const message = levelMessages[newLevel] || 'Congratulations on your promotion!';
+
+    // Show browser alert for maximum visibility
+    alert(`${emoji} Experience Level Promotion!\n\nCongratulations! You have been promoted to ${newLevel.toUpperCase()} level!\n\n${message}\n\nKeep up the great work in your gardening journey! 🌟`);
+
+    // Also show a toast notification
+    toast.success(`🎉 Promoted to ${newLevel.charAt(0).toUpperCase() + newLevel.slice(1)} level! ${emoji}`, {
+      autoClose: 8000, // Longer duration for celebration
+    });
   };
 
   // Role checking functions

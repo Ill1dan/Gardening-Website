@@ -51,22 +51,13 @@ function App() {
               } />
               
               {/* Admin only routes */}
-              <Route path="admin" element={
+              <Route path="admin/users" element={
                 <RoleRoute requiredRole="admin">
-                  <div />
+                  <UserManagement />
                 </RoleRoute>
-              }>
-                <Route path="users" element={<UserManagement />} />
-              </Route>
+              } />
               
-              {/* Gardener or higher routes */}
-              <Route path="gardener" element={
-                <RoleRoute minimumRole="gardener">
-                  <div />
-                </RoleRoute>
-              }>
-                {/* Future gardener-specific routes will go here */}
-              </Route>
+              {/* Gardener or higher routes - Future gardener-specific routes will go here */}
 
               {/* Plant management routes (gardener+ only) */}
               <Route path="plants/add" element={
