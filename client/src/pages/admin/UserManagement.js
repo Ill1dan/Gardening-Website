@@ -558,9 +558,8 @@ const UserManagement = () => {
                 placeholder="Search users..."
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="input-field pl-10"
+                className="input-field"
               />
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             </div>
           </div>
 
@@ -634,10 +633,18 @@ const UserManagement = () => {
                     <tr key={user._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                            <span className="text-sm font-bold text-primary-600">
-                              {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
-                            </span>
+                          <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center overflow-hidden">
+                            {user.profileImage ? (
+                              <img 
+                                src={user.profileImage} 
+                                alt={`${user.firstName} ${user.lastName}`}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-sm font-bold text-primary-600">
+                                {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
+                              </span>
+                            )}
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">

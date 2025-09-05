@@ -13,14 +13,15 @@ const {
   getFeaturedPlants,
   getCategories,
   adminGetAllPlants,
-  adminHardDeletePlant
+  adminHardDeletePlant,
+  adminToggleFeatured
 } = require('../controllers/plantController');
 
-const { protect, requireRole } = require('../middleware/auth');
+const { protect, requireRole, optionalAuth } = require('../middleware/auth');
 const { validatePlant, handleValidationErrors } = require('../middleware/validation');
 
 // Public routes
-router.get('/', getPlants);
+router.get('/', optionalAuth, getPlants);
 router.get('/featured', getFeaturedPlants);
 router.get('/categories', getCategories);
 router.get('/:id', getPlantById);
@@ -39,6 +40,7 @@ router.delete('/:id', protect, requireRole('gardener'), deletePlant);
 
 // Admin routes
 router.get('/admin/all', protect, requireRole('admin'), adminGetAllPlants);
+router.put('/admin/:id/featured', protect, requireRole('admin'), adminToggleFeatured);
 router.delete('/admin/:id/permanent', protect, requireRole('admin'), adminHardDeletePlant);
 
 module.exports = router;

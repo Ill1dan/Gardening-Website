@@ -190,10 +190,20 @@ const GardenerDirectory = () => {
               {gardeners.map((gardener) => (
                 <div key={gardener._id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                   <div className="flex items-start space-x-4">
-                    <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-lg font-bold text-primary-600">
-                        {gardener.firstName?.charAt(0)}{gardener.lastName?.charAt(0)}
-                      </span>
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {gardener.profileImage ? (
+                        <img 
+                          src={gardener.profileImage} 
+                          alt={`${gardener.firstName} ${gardener.lastName}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-primary-100 flex items-center justify-center">
+                          <span className="text-lg font-bold text-primary-600">
+                            {gardener.firstName?.charAt(0)}{gardener.lastName?.charAt(0)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg font-semibold text-gray-900 truncate">

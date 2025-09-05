@@ -167,6 +167,16 @@ class PlantService {
     }
   }
 
+  // Admin: Toggle featured status of a plant
+  async adminToggleFeatured(id, featured) {
+    try {
+      const response = await api.put(`/plants/admin/${id}/featured`, { featured });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   // Handle API errors
   handleError(error) {
     if (error.response) {

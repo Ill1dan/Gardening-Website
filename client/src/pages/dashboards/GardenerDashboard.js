@@ -16,8 +16,8 @@ const GardenerDashboard = () => {
   const { user } = useAuth();
 
   const contentActions = [
-    { title: 'Create Plant Guide', description: 'Share your plant knowledge', icon: PlusIcon, href: '/gardener/guides/new', color: 'bg-green-600' },
-    { title: 'Write Article', description: 'Share gardening tips', icon: PencilIcon, href: '/gardener/articles/new', color: 'bg-blue-600' },
+    { title: 'Create Plant Guide', description: 'Share your plant knowledge', icon: PlusIcon, href: '/plants/add', color: 'bg-green-600' },
+    { title: 'Write Article', description: 'Share gardening tips', icon: PencilIcon, href: '/articles/new', color: 'bg-blue-600' },
     { title: 'Answer Questions', description: 'Help community members', icon: ChatBubbleLeftRightIcon, href: '/questions', color: 'bg-purple-600' },
     { title: 'My Content', description: 'Manage your contributions', icon: BookOpenIcon, href: '/gardener/content', color: 'bg-indigo-600' }
   ];

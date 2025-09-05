@@ -387,6 +387,119 @@ const validatePlantQuery = [
     .withMessage('Featured must be a boolean')
 ];
 
+// Article validation
+const validateArticle = [
+  body('title')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Article title is required and must not exceed 200 characters'),
+  
+  body('excerpt')
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Article excerpt is required and must not exceed 500 characters'),
+  
+  body('content')
+    .trim()
+    .isLength({ min: 1, max: 10000 })
+    .withMessage('Article content is required and must not exceed 10000 characters'),
+  
+  body('category')
+    .isIn(['gardening-tips', 'plant-care', 'seasonal-guides', 'pest-control', 'soil-fertilizer', 'tools-equipment', 'beginner-guides', 'advanced-techniques', 'indoor-gardening', 'outdoor-gardening'])
+    .withMessage('Invalid article category'),
+  
+  body('tags')
+    .optional()
+    .isArray()
+    .withMessage('Tags must be an array')
+    .custom((value) => {
+      if (value && value.length > 10) {
+        throw new Error('Maximum 10 tags allowed');
+      }
+      if (value && value.some(tag => tag.length > 30)) {
+        throw new Error('Each tag must not exceed 30 characters');
+      }
+      return true;
+    }),
+  
+  body('featuredImage.url')
+    .isURL()
+    .withMessage('Featured image must have a valid URL'),
+  
+  body('featuredImage.alt')
+    .optional()
+    .isLength({ max: 200 })
+    .withMessage('Featured image alt text must not exceed 200 characters'),
+  
+  body('images')
+    .optional()
+    .isArray()
+    .withMessage('Images must be an array'),
+  
+  body('images.*.url')
+    .optional()
+    .isURL()
+    .withMessage('Each image must have a valid URL'),
+  
+  body('images.*.caption')
+    .optional()
+    .isLength({ max: 200 })
+    .withMessage('Image caption must not exceed 200 characters'),
+  
+  body('status')
+    .optional()
+    .isIn(['draft', 'published', 'archived'])
+    .withMessage('Status must be draft, published, or archived')
+];
+
+// Article query validation
+const validateArticleQuery = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Page must be a positive integer'),
+  
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 50 })
+    .withMessage('Limit must be between 1 and 50'),
+  
+  query('category')
+    .optional()
+    .isIn(['gardening-tips', 'plant-care', 'seasonal-guides', 'pest-control', 'soil-fertilizer', 'tools-equipment', 'beginner-guides', 'advanced-techniques', 'indoor-gardening', 'outdoor-gardening'])
+    .withMessage('Invalid category'),
+  
+  query('author')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid author ID'),
+  
+  query('search')
+    .optional()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Search term must be between 1 and 100 characters'),
+  
+  query('sortBy')
+    .optional()
+    .isIn(['createdAt', 'publishedAt', 'title', 'viewCount', 'likeCount'])
+    .withMessage('Invalid sort field'),
+  
+  query('sortOrder')
+    .optional()
+    .isIn(['asc', 'desc'])
+    .withMessage('Sort order must be asc or desc'),
+  
+  query('featured')
+    .optional()
+    .isBoolean()
+    .withMessage('Featured must be a boolean'),
+  
+  query('status')
+    .optional()
+    .isIn(['draft', 'published', 'archived'])
+    .withMessage('Invalid status')
+];
+
 module.exports = {
   handleValidationErrors,
   validateRegistration,
@@ -399,5 +512,7 @@ module.exports = {
   validateGardenerQuery,
   validatePlant,
   validateReview,
-  validatePlantQuery
+  validatePlantQuery,
+  validateArticle,
+  validateArticleQuery
 };

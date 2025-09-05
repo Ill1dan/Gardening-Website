@@ -34,7 +34,8 @@ const PlantCatalog = () => {
     search: searchParams.get('search') || '',
     sortBy: searchParams.get('sortBy') || 'createdAt',
     sortOrder: searchParams.get('sortOrder') || 'desc',
-    featured: searchParams.get('featured') || ''
+    featured: searchParams.get('featured') || '',
+    favorites: searchParams.get('favorites') || ''
   };
 
   useEffect(() => {
@@ -107,6 +108,17 @@ const PlantCatalog = () => {
     }
   };
 
+  const handleFeaturedToggle = (plantId, newFeaturedStatus) => {
+    // Update the plant in the local state
+    setPlants(prevPlants => 
+      prevPlants.map(plant => 
+        plant._id === plantId 
+          ? { ...plant, featured: newFeaturedStatus }
+          : plant
+      )
+    );
+  };
+
   if (loading && plants.length === 0) {
     return <LoadingSpinner />;
   }
@@ -159,6 +171,7 @@ const PlantCatalog = () => {
                 filters={currentFilters}
                 categories={categories}
                 onFilterChange={handleFilterChange}
+                user={user}
               />
             </div>
           </div>
@@ -215,6 +228,7 @@ const PlantCatalog = () => {
                     key={plant._id} 
                     plant={plant} 
                     onDelete={isAdmin() ? handleAdminDeletePlant : null}
+                    onFeaturedToggle={isAdmin() ? handleFeaturedToggle : null}
                   />
                 ))}
               </div>

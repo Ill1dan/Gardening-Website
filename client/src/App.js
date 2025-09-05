@@ -20,6 +20,9 @@ import GardenerDirectory from './pages/GardenerDirectory';
 import PlantCatalog from './pages/PlantCatalog';
 import PlantDetail from './pages/PlantDetail';
 import AddEditPlant from './pages/AddEditPlant';
+import Articles from './pages/Articles';
+import ArticleDetail from './pages/ArticleDetail';
+import AddEditArticle from './pages/AddEditArticle';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -34,6 +37,8 @@ function App() {
               <Route path="gardeners" element={<GardenerDirectory />} />
               <Route path="plants" element={<PlantCatalog />} />
               <Route path="plants/:id" element={<PlantDetail />} />
+              <Route path="articles" element={<Articles />} />
+              <Route path="articles/:id" element={<ArticleDetail />} />
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
               
@@ -68,6 +73,18 @@ function App() {
               <Route path="plants/:id/edit" element={
                 <RoleRoute minimumRole="gardener">
                   <AddEditPlant />
+                </RoleRoute>
+              } />
+
+              {/* Article management routes (gardener+ only) */}
+              <Route path="articles/new" element={
+                <RoleRoute minimumRole="gardener">
+                  <AddEditArticle />
+                </RoleRoute>
+              } />
+              <Route path="articles/:id/edit" element={
+                <RoleRoute minimumRole="gardener">
+                  <AddEditArticle />
                 </RoleRoute>
               } />
             </Route>

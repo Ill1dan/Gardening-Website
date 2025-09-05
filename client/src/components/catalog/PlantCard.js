@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
-import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import plantService from '../../services/plantService';
+import { PencilIcon, TrashIcon, StarIcon } from '@heroicons/react/24/outline';
+import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 
-const PlantCard = ({ plant, onDelete }) => {
+const PlantCard = ({ plant, onDelete, onFeaturedToggle }) => {
   const { isAdmin } = useAuth();
+  const [isTogglingFeatured, setIsTogglingFeatured] = useState(false);
   const primaryImage = plant.images?.find(img => img.isPrimary) || plant.images?.[0];
 
   const getDifficultyColor = (difficulty) => {
@@ -47,26 +51,79 @@ const PlantCard = ({ plant, onDelete }) => {
     }
   };
 
+  const handleFeaturedToggle = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isTogglingFeatured) return;
+    
+    setIsTogglingFeatured(true);
+    try {
+      const newFeaturedStatus = !plant.featured;
+      await plantService.adminToggleFeatured(plant._id, newFeaturedStatus);
+      toast.success(`Plant ${newFeaturedStatus ? 'marked as featured' : 'removed from featured'}`);
+      
+      // Call the callback to refresh the plant list
+      if (onFeaturedToggle) {
+        onFeaturedToggle(plant._id, newFeaturedStatus);
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to update featured status');
+    } finally {
+      setIsTogglingFeatured(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 relative">
+      {/* Featured Badge */}
+      {plant.featured && (
+        <div className="absolute top-2 left-2 z-10">
+          <div className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center">
+            <StarSolidIcon className="w-3 h-3 mr-1" />
+            Featured
+          </div>
+        </div>
+      )}
+
       {/* Admin Controls */}
-      {isAdmin() && onDelete && (
+      {isAdmin() && (
         <div className="absolute top-2 right-2 z-10 flex space-x-1">
-          <Link
-            to={`/plants/${plant._id}/edit`}
-            className="bg-white bg-opacity-90 hover:bg-opacity-100 text-indigo-600 p-2 rounded-full shadow-md hover:shadow-lg transition-all"
-            title="Edit Plant"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <PencilIcon className="w-4 h-4" />
-          </Link>
           <button
-            onClick={handleDelete}
-            className="bg-white bg-opacity-90 hover:bg-opacity-100 text-red-600 p-2 rounded-full shadow-md hover:shadow-lg transition-all"
-            title="Delete Plant"
+            onClick={handleFeaturedToggle}
+            disabled={isTogglingFeatured}
+            className={`bg-white bg-opacity-90 hover:bg-opacity-100 p-2 rounded-full shadow-md hover:shadow-lg transition-all ${
+              plant.featured 
+                ? 'text-yellow-600' 
+                : 'text-gray-600 hover:text-yellow-600'
+            } ${isTogglingFeatured ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title={plant.featured ? 'Remove from Featured' : 'Mark as Featured'}
           >
-            <TrashIcon className="w-4 h-4" />
+            {plant.featured ? (
+              <StarSolidIcon className="w-4 h-4" />
+            ) : (
+              <StarIcon className="w-4 h-4" />
+            )}
           </button>
+          {onDelete && (
+            <>
+              <Link
+                to={`/plants/${plant._id}/edit`}
+                className="bg-white bg-opacity-90 hover:bg-opacity-100 text-indigo-600 p-2 rounded-full shadow-md hover:shadow-lg transition-all"
+                title="Edit Plant"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <PencilIcon className="w-4 h-4" />
+              </Link>
+              <button
+                onClick={handleDelete}
+                className="bg-white bg-opacity-90 hover:bg-opacity-100 text-red-600 p-2 rounded-full shadow-md hover:shadow-lg transition-all"
+                title="Delete Plant"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
       )}
 

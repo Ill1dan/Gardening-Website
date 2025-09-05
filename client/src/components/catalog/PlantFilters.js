@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const PlantFilters = ({ filters, categories, onFilterChange }) => {
+const PlantFilters = ({ filters, categories, onFilterChange, user }) => {
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
 
   const handleSearchSubmit = (e) => {
@@ -117,6 +117,21 @@ const PlantFilters = ({ filters, categories, onFilterChange }) => {
           <span className="ml-2 text-sm font-medium text-gray-900">Featured Only</span>
         </label>
       </div>
+
+      {/* Favorites Toggle */}
+      {user && (
+        <div>
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={filters.favorites === 'true'}
+              onChange={(e) => handleFilterChange('favorites', e.target.checked ? 'true' : '')}
+              className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+            />
+            <span className="ml-2 text-sm font-medium text-gray-900">My Favorites Only</span>
+          </label>
+        </div>
+      )}
 
       {/* Categories */}
       {categories.length > 0 && (

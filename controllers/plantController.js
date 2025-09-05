@@ -17,7 +17,8 @@ const getPlants = async (req, res) => {
       search,
       sortBy = 'createdAt',
       sortOrder = 'desc',
-      featured
+      featured,
+      favorites
     } = req.query;
 
     // Build filter query
@@ -29,6 +30,13 @@ const getPlants = async (req, res) => {
     if (sunlight) filter['careInstructions.sunlight'] = sunlight;
     if (water) filter['careInstructions.water'] = water;
     if (featured === 'true') filter.featured = true;
+    
+    // Handle favorites filter - only show plants favorited by the current user
+    if (favorites === 'true' && req.user) {
+      const userFavorites = await Favorite.find({ user: req.user._id }).select('plant');
+      const favoritePlantIds = userFavorites.map(fav => fav.plant);
+      filter._id = { $in: favoritePlantIds };
+    }
 
     // Add search functionality
     if (search) {
@@ -702,6 +710,54 @@ const adminHardDeletePlant = async (req, res) => {
   }
 };
 
+// Admin: Toggle featured status of a plant
+const adminToggleFeatured = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { featured } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid plant ID'
+      });
+    }
+
+    if (typeof featured !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'Featured status must be a boolean value'
+      });
+    }
+
+    const plant = await Plant.findByIdAndUpdate(
+      id,
+      { featured },
+      { new: true, runValidators: true }
+    ).populate('addedBy', 'username firstName lastName');
+
+    if (!plant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Plant not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Plant ${featured ? 'marked as featured' : 'removed from featured'}`,
+      data: plant
+    });
+  } catch (error) {
+    console.error('Error in adminToggleFeatured:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating featured status',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getPlants,
   getPlantById,
@@ -715,5 +771,6 @@ module.exports = {
   getFeaturedPlants,
   getCategories,
   adminGetAllPlants,
-  adminHardDeletePlant
+  adminHardDeletePlant,
+  adminToggleFeatured
 };
